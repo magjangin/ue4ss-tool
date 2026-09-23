@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ue4ss tool/ue4ss tool.csproj" />
+  <Project Path="Ue4ssTool.Tests/Ue4ssTool.Tests.csproj" />
+</Solution>

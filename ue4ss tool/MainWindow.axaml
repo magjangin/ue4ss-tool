@@ -1,0 +1,156 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ue4ss_tool"
+        mc:Ignorable="d" d:DesignWidth="1180" d:DesignHeight="760"
+        x:Class="ue4ss_tool.MainWindow"
+        Width="1180" Height="760" MinWidth="900" MinHeight="560"
+        Title="UE4SS 설치 도우미">
+
+    <DockPanel Margin="16">
+
+        <!-- 상단: 스캔 -->
+        <StackPanel DockPanel.Dock="Top" Spacing="8">
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="스캔 폴더:" VerticalAlignment="Center"/>
+                <TextBox x:Name="RootBox" Width="520" VerticalAlignment="Center"
+                         PlaceholderText="(비워두면 자동 감지: 모든 Steam 라이브러리 및 보존본. 여러 개는 세미콜론(;) 구분)"/>
+                <Button Content="찾아보기…" Click="OnBrowseClick"/>
+                <Button Content="폴더 추가…" Click="OnAddFolderClick"
+                        ToolTip.Tip="Steam 밖의 게임 폴더(보존본 등)를 추가로 지정합니다."/>
+                <Button Content="자동 감지" Click="OnAutoClick"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Button x:Name="ScanButton" Content="스캔 시작" Click="OnScanClick"
+                        Padding="16,8" FontSize="14"/>
+                <TextBlock Text="보기:" VerticalAlignment="Center"/>
+                <ComboBox x:Name="FilterCombo" Width="240" SelectedIndex="0"
+                          SelectionChanged="OnFilterChanged" VerticalAlignment="Center">
+                    <!-- Tag 가 곧 필터 값이다. 항목 순서와 GameView 순서는 서로 무관하다. -->
+                    <ComboBoxItem Tag="{x:Static local:GameView.AllUnreal}">전체 언리얼 게임</ComboBoxItem>
+                    <ComboBoxItem Tag="{x:Static local:GameView.UE5}">UE5</ComboBoxItem>
+                    <ComboBoxItem Tag="{x:Static local:GameView.UE4}">UE4</ComboBoxItem>
+                    <ComboBoxItem Tag="{x:Static local:GameView.UnknownVersion}">버전 미확인 (UE4/5)</ComboBoxItem>
+                    <ComboBoxItem Tag="{x:Static local:GameView.UE3}">UE3 (UE4SS 미지원)</ComboBoxItem>
+                    <ComboBoxItem Tag="{x:Static local:GameView.Ue4ssInstalled}">UE4SS 설치됨</ComboBoxItem>
+                    <ComboBoxItem Tag="{x:Static local:GameView.Ue4ssNotInstalled}">UE4SS 미설치</ComboBoxItem>
+                    <ComboBoxItem Tag="{x:Static local:GameView.AntiCheat}">안티치트 있음</ComboBoxItem>
+                </ComboBox>
+                <ProgressBar x:Name="Spinner" IsIndeterminate="True" IsVisible="False"
+                             Width="120" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <TextBlock x:Name="SummaryText" FontSize="18" FontWeight="SemiBold"
+                       Text="스캔을 시작하세요." Margin="0,8,0,0" TextWrapping="Wrap"/>
+            <TextBlock x:Name="StatusText" Foreground="Gray" Text="" TextWrapping="Wrap"/>
+            <Border Height="1" Background="#33888888" Margin="0,6,0,6"/>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,16,420">
+
+            <!-- 왼쪽: 게임 목록 -->
+            <ListBox x:Name="GameList" Grid.Column="0" SelectionChanged="OnGameSelected">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="local:UnrealGame">
+                        <Grid ColumnDefinitions="*,Auto" Margin="2,4">
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding DisplayName}" FontSize="14"/>
+                                <TextBlock Text="{Binding InstallDir}" FontSize="11" Foreground="Gray"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                            <ItemsControl Grid.Column="1" ItemsSource="{Binding Tags}" VerticalAlignment="Center">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="4"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:GameTag">
+                                        <Border CornerRadius="4" Padding="8,2"
+                                                Background="{Binding Kind, Converter={x:Static local:Converters.TagBrush}}">
+                                            <TextBlock Text="{Binding Text}" Foreground="White"
+                                                       FontSize="11" FontWeight="Bold"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- 오른쪽: 선택한 게임과 UE4SS 설치 -->
+            <Border Grid.Column="2" BorderBrush="#33888888" BorderThickness="1" CornerRadius="6" Padding="14">
+                <ScrollViewer>
+                    <StackPanel Spacing="10" Margin="0,0,14,0">
+                        <TextBlock x:Name="DetailTitle" FontSize="16" FontWeight="SemiBold"
+                                   Text="왼쪽 목록에서 게임을 고르세요." TextWrapping="Wrap"/>
+
+                        <StackPanel x:Name="DetailPanel" Spacing="10" IsVisible="False">
+                            <Grid ColumnDefinitions="90,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                                <TextBlock Grid.Row="0" Text="엔진" Foreground="Gray"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="EngineText" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Row="1" Text="게임 exe" Foreground="Gray" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="ExeText" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="2" Text="설치 위치" Foreground="Gray" Margin="0,4,0,0"/>
+                                <SelectableTextBlock Grid.Row="2" Grid.Column="1" x:Name="TargetText" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="3" Text="지원" Foreground="Gray" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="SupportText" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="4" Text="UE4SS" Foreground="Gray" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" x:Name="Ue4ssText" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="5" Text="기타" Foreground="Gray" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" x:Name="ExtraText" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            </Grid>
+
+                            <Border x:Name="WarningBox" Background="#22E65100" CornerRadius="4" Padding="10,8" IsVisible="False">
+                                <TextBlock x:Name="WarningText" TextWrapping="Wrap" Foreground="#E65100"/>
+                            </Border>
+
+                            <WrapPanel>
+                                <Button Content="게임 폴더 열기" Click="OnOpenInstallDirClick" Margin="0,0,6,6"/>
+                                <Button x:Name="OpenExeDirButton" Content="exe 폴더 열기" Click="OnOpenExeDirClick" Margin="0,0,6,6"/>
+                            </WrapPanel>
+
+                            <Border Height="1" Background="#33888888"/>
+
+                            <TextBlock Text="UE4SS 패키지" FontWeight="SemiBold"/>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <ComboBox x:Name="PackageCombo" HorizontalAlignment="Stretch"
+                                          PlaceholderText="(릴리스 목록을 불러오는 중…)"
+                                          SelectionChanged="OnPackageChanged"/>
+                                <Button Grid.Column="1" Content="새로고침" Click="OnRefreshPackagesClick" Margin="6,0,0,0"
+                                        ToolTip.Tip="GitHub 에서 UE4SS 릴리스 목록을 다시 가져옵니다."/>
+                            </Grid>
+                            <TextBlock x:Name="PackageInfoText" Foreground="Gray" FontSize="12" TextWrapping="Wrap"/>
+                            <CheckBox x:Name="KeepUserFilesCheck" IsChecked="True"
+                                      Content="업데이트할 때 UE4SS-settings.ini · mods.txt 유지"/>
+
+                            <WrapPanel>
+                                <Button x:Name="InstallButton" Content="설치 / 업데이트" Click="OnInstallClick"
+                                        Classes="accent" Padding="16,8" Margin="0,0,6,6"/>
+                                <Button x:Name="InstallLocalButton" Content="로컬 ZIP으로 설치…" Click="OnInstallLocalClick"
+                                        Padding="12,8" Margin="0,0,6,6"/>
+                            </WrapPanel>
+                            <WrapPanel>
+                                <Button x:Name="ToggleButton" Content="끄기" Click="OnToggleClick" Margin="0,0,6,6"
+                                        ToolTip.Tip="프록시 DLL 이름에 .disabled 를 붙여 UE4SS 로드만 끕니다. 다른 파일은 그대로입니다."/>
+                                <Button x:Name="UninstallButton" Content="제거 (휴지통)" Click="OnUninstallClick" Margin="0,0,6,6"/>
+                            </WrapPanel>
+                            <WrapPanel>
+                                <Button x:Name="OpenSettingsButton" Content="설정 파일 열기" Click="OnOpenSettingsClick" Margin="0,0,6,6"/>
+                                <Button x:Name="OpenModsButton" Content="Mods 폴더 열기" Click="OnOpenModsClick" Margin="0,0,6,6"/>
+                                <Button x:Name="OpenLogButton" Content="로그 열기" Click="OnOpenLogClick" Margin="0,0,6,6"/>
+                            </WrapPanel>
+
+                            <ProgressBar x:Name="DownloadBar" Minimum="0" Maximum="1" IsVisible="False"/>
+                            <SelectableTextBlock x:Name="ActionLog" TextWrapping="Wrap" Foreground="Gray"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>
