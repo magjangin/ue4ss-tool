@@ -6,7 +6,8 @@
         mc:Ignorable="d" d:DesignWidth="1180" d:DesignHeight="760"
         x:Class="ue4ss_tool.MainWindow"
         Width="1180" Height="760" MinWidth="900" MinHeight="560"
-        Title="UE4SS 설치 도우미">
+        Title="UE4SS 설치 도우미"
+        Icon="/Assets/icon.ico">
 
     <DockPanel Margin="16">
 

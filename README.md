@@ -2,6 +2,9 @@
 
 <div align="center">
 
+<img src="ue4ss tool/Assets/icon.png" width="128" height="128" alt="ue4ss tool icon" />
+<br/><br/>
+
 ![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
 ![Avalonia UI](https://img.shields.io/badge/Avalonia%20UI-12.1.2-8B5CF6?logo=avalonia&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)
