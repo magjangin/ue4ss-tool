@@ -6,7 +6,6 @@
 ![Avalonia UI](https://img.shields.io/badge/Avalonia%20UI-12.1.2-8B5CF6?logo=avalonia&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)
 ![Tests](https://img.shields.io/badge/Tests-92%20passed-brightgreen?logo=xunit&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 **Steam에 설치된 언리얼 엔진(UE4/UE5/UE3) 게임을 자동으로 찾아내고,<br/>[RE-UE4SS](https://github.com/UE4SS-RE/RE-UE4SS) 모드 로더를 원클릭으로 설치·업데이트·관리하는 Windows 데스크톱 도구**
 
@@ -127,8 +126,3 @@ dotnet test "ue4ss tool.slnx"
 * **휴지통 보존**: 모드 로더 제거 시 영구 삭제하지 않고 Windows 휴지통으로 안전하게 이동합니다.
 * **관리자 권한 불필요**: 일반 사용자 권한으로 모든 Steam 라이브러리 조작이 가능합니다.
 
----
-
-## 📄 라이선스
-
-This project is licensed under the [MIT License](LICENSE).
