@@ -121,4 +121,30 @@ public class Ue4ssSettingsTests : IDisposable
         Assert.False(Ue4ssSettings.ForceConsoleOn(path));
         Assert.Equal(stamp, File.GetLastWriteTimeUtc(path));
     }
+
+    [Fact]
+    public void IsConsoleEnabled_꺼져있으면_false_모두켜지면_true()
+    {
+        Assert.False(Ue4ssSettings.IsConsoleEnabled(RealDebug));
+
+        var onText = RealDebug
+            .Replace("ConsoleEnabled = 0", "ConsoleEnabled = 1")
+            .Replace("GuiConsoleEnabled = 0", "GuiConsoleEnabled = 1")
+            .Replace("GuiConsoleVisible = 0", "GuiConsoleVisible = 1");
+
+        Assert.True(Ue4ssSettings.IsConsoleEnabled(onText));
+    }
+
+    [Fact]
+    public void ForceConsoleOff_켜져있는_콘솔값을_0으로_끈다()
+    {
+        var onText = RealDebug
+            .Replace("ConsoleEnabled = 0", "ConsoleEnabled = 1")
+            .Replace("GuiConsoleEnabled = 0", "GuiConsoleEnabled = 1")
+            .Replace("GuiConsoleVisible = 0", "GuiConsoleVisible = 1");
+
+        var result = Ue4ssSettings.ForceConsoleOff(onText, out var changed);
+        Assert.True(changed);
+        Assert.False(Ue4ssSettings.IsConsoleEnabled(result));
+    }
 }

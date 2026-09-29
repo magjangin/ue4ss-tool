@@ -8,7 +8,7 @@
 ![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
 ![Avalonia UI](https://img.shields.io/badge/Avalonia%20UI-12.1.2-8B5CF6?logo=avalonia&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-92%20passed-brightgreen?logo=xunit&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-94%20passed-brightgreen?logo=xunit&logoColor=white)
 
 **Steam에 설치된 언리얼 엔진(UE4/UE5/UE3) 게임을 자동으로 찾아내고,<br/>[RE-UE4SS](https://github.com/UE4SS-RE/RE-UE4SS) 모드 로더를 원클릭으로 설치·업데이트·관리하는 Windows 데스크톱 도구**
 
@@ -32,7 +32,7 @@
 * ⚡ **초고속 라이브러리 스캔**: Windows 레지스트리와 Steam `libraryfolders.vdf`, 드라이브 루트 보존본을 탐색하여 수백 개의 게임 중 언리얼 엔진 게임만 1~2초 내에 고속 추출.
 * 🎯 **정밀 엔진 버전 판별**: 실행 파일의 `FILEVERSION` 리소스 및 바이너리 내 `++UE5+Release-` / `++UE4+Release-` 브랜치 문자열(4MB 스트림 청크 + 64B 오버랩)을 분석하여 정확한 엔진 버전(UE 4.0~5.8) 판별.
 * 📦 **GitHub 릴리스 자동 연동**: [RE-UE4SS](https://github.com/UE4SS-RE/RE-UE4SS)의 최신 안정판(v3.0.1) 및 실험판(experimental-latest)을 GitHub API로 조회하여 원클릭 다운로드 및 로컬 캐싱.
-* 🛠️ **디버그 & GUI 콘솔 자동 활성화**: 순정 패키지에서 기본값 `0`(꺼짐)으로 되어 있는 `UE4SS-settings.ini`의 `ConsoleEnabled`, `GuiConsoleEnabled`, `GuiConsoleVisible` 값을 설치/업데이트 시 자동으로 `1`로 고정.
+* 🛠️ **디버그 & GUI 콘솔 관리**: 순정 패키지에서 기본값 `0`(꺼짐)으로 되어 있는 `UE4SS-settings.ini`의 `ConsoleEnabled`, `GuiConsoleEnabled`, `GuiConsoleVisible` 값을 설치/업데이트 시 자동으로 `1`로 고정하며, 관리 패널에서 원클릭으로 **「콘솔 끄기/켜기」**를 언제든 토글 가능.
 * 🛡️ **안전한 설치 (Preflight Check)**: 기존 설치 레이아웃과의 충돌 방지, 타 모드 DLL 보호, 게임 실행 중 설치 차단.
 * 🔄 **스마트 업데이트 & 모드 자산 보존**: 핵심 모드 로더 파일만 최신화하고, 사용자가 작성한 모드 폴더 및 `mods.txt`, `mods.json`, 설정 파일은 안전하게 유지.
 * 📴 **원클릭 비활성화 (끄기/켜기)**: 파일 삭제 없이 프록시 DLL 이름을 `dwmapi.dll` ↔ `dwmapi.dll.disabled`로 토글하여 순정 상태로 즉시 복구.
@@ -63,7 +63,7 @@ dotnet run --project "ue4ss tool/ue4ss tool.csproj"
 2. **「보기 필터」** 선택: UE5 / UE4 / UE3 / UE4SS 설치됨 / 미설치 / 안티치트 별로 게임을 필터링합니다.
 3. **게임 선택**: 오른쪽 패널에서 엔진 버전, 실제 게임 exe 위치, IoStore 여부, UE4SS 호환성을 확인합니다.
 4. **UE4SS 패키지 선택 후 「설치」**: GitHub에서 패키지를 받아 설치될 파일 확인 창을 거친 뒤 안전하게 설치합니다.
-5. **관리**: 이미 설치된 게임은 **「업데이트」**, **「끄기/켜기」**, **「제거 (휴지통)」**, **「설정 파일 / Mods 폴더 / 로그 열기」** 버튼으로 손쉽게 관리합니다.
+5. **관리**: 이미 설치된 게임은 **「업데이트」**, **「끄기/켜기」**, **「콘솔 끄기/켜기」**, **「제거 (휴지통)」**, **「설정 파일 / Mods 폴더 / 로그 열기」** 버튼으로 손쉽게 관리합니다.
 
 ---
 

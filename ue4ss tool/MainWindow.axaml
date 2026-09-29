@@ -141,6 +141,8 @@
                                 <Button x:Name="UninstallButton" Content="제거 (휴지통)" Click="OnUninstallClick" Margin="0,0,6,6"/>
                             </WrapPanel>
                             <WrapPanel>
+                                <Button x:Name="EnableConsoleButton" Content="콘솔 켜기" Click="OnEnableConsoleClick" Margin="0,0,6,6"
+                                        ToolTip.Tip="UE4SS-settings.ini 의 디버그 콘솔 및 GUI 창을 활성화합니다(ConsoleEnabled·GuiConsoleEnabled·GuiConsoleVisible = 1)."/>
                                 <Button x:Name="OpenSettingsButton" Content="설정 파일 열기" Click="OnOpenSettingsClick" Margin="0,0,6,6"/>
                                 <Button x:Name="OpenModsButton" Content="Mods 폴더 열기" Click="OnOpenModsClick" Margin="0,0,6,6"/>
                                 <Button x:Name="OpenLogButton" Content="로그 열기" Click="OnOpenLogClick" Margin="0,0,6,6"/>

@@ -302,8 +302,12 @@ public partial class MainWindow : Window
         ToggleButton.Content = game.Ue4ss.IsDisabled ? "켜기" : "끄기";
         UninstallButton.IsEnabled = !_busy && game.Ue4ss.Layout is not (Ue4ssLayout.None or Ue4ssLayout.ForeignProxy);
 
+        bool hasSettings = game.Ue4ss.WorkingDir is not null && File.Exists(game.Ue4ss.SettingsPath);
+        EnableConsoleButton.IsEnabled = !_busy && hasSettings;
+        EnableConsoleButton.Content = game.Ue4ss.IsConsoleEnabled ? "콘솔 끄기" : "콘솔 켜기";
+
         OpenExeDirButton.IsEnabled = game.ExeDir is not null;
-        OpenSettingsButton.IsEnabled = game.Ue4ss.WorkingDir is not null && File.Exists(game.Ue4ss.SettingsPath);
+        OpenSettingsButton.IsEnabled = hasSettings;
         OpenModsButton.IsEnabled = game.Ue4ss.WorkingDir is not null && Directory.Exists(game.Ue4ss.ModsDir);
         OpenLogButton.IsEnabled = game.Ue4ss.WorkingDir is not null && File.Exists(game.Ue4ss.LogPath);
     }
@@ -546,7 +550,42 @@ public partial class MainWindow : Window
         }
     }
 
-    // ── 열기 ────────────────────────────────────────────────────
+    // ── 열기 및 설정 ────────────────────────────────────────────
+
+    private void OnEnableConsoleClick(object? sender, RoutedEventArgs e)
+    {
+        if (SelectedGame is not { ExeDir: { } } game) return;
+        var settingsPath = game.Ue4ss.SettingsPath;
+        if (string.IsNullOrEmpty(settingsPath) || !File.Exists(settingsPath))
+        {
+            ActionLog.Text = "설정 파일(UE4SS-settings.ini)을 찾을 수 없습니다.";
+            return;
+        }
+
+        try
+        {
+            if (game.Ue4ss.IsConsoleEnabled)
+            {
+                var changed = Ue4ssSettings.ForceConsoleOff(settingsPath);
+                Refresh(game);
+                ActionLog.Text = changed
+                    ? "UE4SS-settings.ini 에서 디버그 콘솔 및 GUI 창을 껐습니다(ConsoleEnabled·GuiConsoleEnabled·GuiConsoleVisible = 0)."
+                    : "이미 콘솔 및 GUI 창이 꺼져 있습니다.";
+            }
+            else
+            {
+                var changed = Ue4ssSettings.ForceConsoleOn(settingsPath);
+                Refresh(game);
+                ActionLog.Text = changed
+                    ? "UE4SS-settings.ini 에서 디버그 콘솔 및 GUI 창을 켰습니다(ConsoleEnabled·GuiConsoleEnabled·GuiConsoleVisible = 1)."
+                    : "이미 모든 콘솔 및 GUI 창 설정이 켜져 있습니다.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ActionLog.Text = $"콘솔 설정 변경 실패: {ex.Message}";
+        }
+    }
 
     private void OnOpenInstallDirClick(object? sender, RoutedEventArgs e) => Open(SelectedGame?.InstallDir);
     private void OnOpenExeDirClick(object? sender, RoutedEventArgs e) => Open(SelectedGame?.ExeDir);

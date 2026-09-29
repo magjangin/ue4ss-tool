@@ -57,6 +57,9 @@ public sealed record Ue4ssState
     /// <summary>exe 폴더에 있는 다른 DLL 로더(ReShade 의 dxgi.dll 등). 충돌 진단용 정보.</summary>
     public IReadOnlyList<string> OtherLoaders { get; init; } = Array.Empty<string>();
 
+    /// <summary>UE4SS-settings.ini 의 디버그 콘솔 및 GUI 창 설정이 켜져 있는가.</summary>
+    public bool IsConsoleEnabled { get; init; }
+
     public bool IsInstalled => Layout is Ue4ssLayout.Subfolder or Ue4ssLayout.Flat or Ue4ssLayout.LegacyXinput;
 
     /// <summary>UE4SS.dll 이 어디에 있는가만 본다(프록시와 무관). Subfolder / Flat / None.</summary>
@@ -79,6 +82,7 @@ public sealed record Ue4ssState
         Ue4ssLayout.Partial => "UE4SS.dll 은 있지만 프록시 DLL 이 없음 (불완전한 설치)",
         _ => $"설치됨{(Version is null ? "" : $" {Version}")} · {LayoutName(Layout)}" +
              (IsDisabled ? " · 꺼짐" : "") +
+             $" · 콘솔 {(IsConsoleEnabled ? "켬" : "꺼짐")}" +
              $" · 모드 폴더 {ModFolderCount}개",
     };
 
@@ -159,6 +163,9 @@ public static class Ue4ssDetector
             .ToList();
 
         var workingDir = core is null ? null : Path.GetDirectoryName(core);
+        var settingsPath = workingDir is null ? null : Path.Combine(workingDir, SettingsFile);
+        var isConsoleEnabled = settingsPath is not null && Ue4ssSettings.IsFileConsoleEnabled(settingsPath);
+
         return new Ue4ssState
         {
             Layout = layout,
@@ -170,6 +177,7 @@ public static class Ue4ssDetector
             ModFolderCount = workingDir is null ? 0 : CountMods(Path.Combine(workingDir, "Mods")),
             HasOverride = hasOverride,
             OtherLoaders = others,
+            IsConsoleEnabled = isConsoleEnabled,
         };
     }
 

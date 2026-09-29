@@ -36,6 +36,68 @@ public static class Ue4ssSettings
         return true;
     }
 
+    /// <summary>파일의 콘솔 창 설정을 끈다(0). 바꾼 것이 있으면 true.</summary>
+    public static bool ForceConsoleOff(string path)
+    {
+        var bytes = File.ReadAllBytes(path);
+        var preamble = Encoding.UTF8.GetPreamble();
+        var hasBom = bytes.AsSpan().StartsWith(preamble);
+        var encoding = new UTF8Encoding(hasBom);
+        var skip = hasBom ? preamble.Length : 0;
+        var text = encoding.GetString(bytes, skip, bytes.Length - skip);
+
+        var patched = ForceConsoleOff(text, out var changed);
+        if (!changed) return false;
+        File.WriteAllText(path, patched, encoding);
+        return true;
+    }
+
+    /// <summary>파일의 콘솔 창 설정(ConsoleEnabled, GuiConsoleEnabled, GuiConsoleVisible)이 모두 1로 켜져 있는지 확인한다.</summary>
+    public static bool IsFileConsoleEnabled(string path)
+    {
+        if (!File.Exists(path)) return false;
+        try
+        {
+            var text = File.ReadAllText(path);
+            return IsConsoleEnabled(text);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>문자열 내의 콘솔 창 설정이 모두 1로 켜져 있는지 확인한다.</summary>
+    internal static bool IsConsoleEnabled(string text)
+    {
+        var newline = text.Contains("\r\n") ? "\r\n" : "\n";
+        var lines = text.Split(newline);
+        var inDebug = false;
+        var onCount = 0;
+
+        foreach (var rawLine in lines)
+        {
+            var trimmed = rawLine.Trim();
+            if (trimmed.StartsWith('[') && trimmed.EndsWith(']'))
+            {
+                inDebug = trimmed[1..^1].Trim().Equals(DebugSection, StringComparison.OrdinalIgnoreCase);
+                continue;
+            }
+            if (!inDebug || trimmed.StartsWith(';') || trimmed.StartsWith('#')) continue;
+
+            var eq = trimmed.IndexOf('=');
+            if (eq < 0) continue;
+            var key = trimmed[..eq].Trim();
+            var val = trimmed[(eq + 1)..].Trim();
+
+            if (ConsoleKeys.Contains(key, StringComparer.OrdinalIgnoreCase) && val == "1")
+            {
+                onCount++;
+            }
+        }
+        return onCount >= ConsoleKeys.Length;
+    }
+
     /// <summary>
     /// <c>[Debug]</c> 의 콘솔 키를 모두 <c>1</c> 로 바꾼다. 없는 키는 <c>[Debug]</c> 바로 아래에,
     /// <c>[Debug]</c> 가 없으면 끝에 섹션째 붙인다.
@@ -87,6 +149,43 @@ public static class Ue4ssSettings
                 lines.Add($"[{DebugSection}]");
                 lines.AddRange(missing);
             }
+            changed = true;
+        }
+
+        var result = string.Join(newline, lines);
+        return endsWithNewline ? result + newline : result;
+    }
+
+    /// <summary>
+    /// <c>[Debug]</c> 의 콘솔 키를 모두 <c>0</c> 으로 바꾼다.
+    /// </summary>
+    internal static string ForceConsoleOff(string text, out bool changed)
+    {
+        changed = false;
+        var newline = text.Contains("\r\n") ? "\r\n" : "\n";
+        var endsWithNewline = text.EndsWith(newline);
+        var lines = text.Length == 0 ? new List<string>() : text.Split(newline).ToList();
+        if (endsWithNewline) lines.RemoveAt(lines.Count - 1);
+
+        var inDebug = false;
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var trimmed = lines[i].Trim();
+            if (trimmed.StartsWith('[') && trimmed.EndsWith(']'))
+            {
+                inDebug = trimmed[1..^1].Trim().Equals(DebugSection, StringComparison.OrdinalIgnoreCase);
+                continue;
+            }
+            if (!inDebug || trimmed.StartsWith(';') || trimmed.StartsWith('#')) continue;
+
+            var eq = lines[i].IndexOf('=');
+            if (eq < 0) continue;
+            var key = lines[i][..eq].Trim();
+            if (!ConsoleKeys.Contains(key, StringComparer.OrdinalIgnoreCase)) continue;
+
+            if (lines[i][(eq + 1)..].Trim() == "0") continue;
+            var indent = lines[i][..(lines[i].Length - lines[i].TrimStart().Length)];
+            lines[i] = $"{indent}{key} = 0";
             changed = true;
         }
 
