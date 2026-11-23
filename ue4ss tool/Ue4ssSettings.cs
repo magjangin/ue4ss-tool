@@ -21,23 +21,15 @@ public static class Ue4ssSettings
     internal static readonly string[] ConsoleKeys = { "ConsoleEnabled", "GuiConsoleEnabled", "GuiConsoleVisible" };
 
     /// <summary>파일의 콘솔 창 설정을 켠다. 바꾼 것이 있으면 true.</summary>
-    public static bool ForceConsoleOn(string path)
-    {
-        var bytes = File.ReadAllBytes(path);
-        var preamble = Encoding.UTF8.GetPreamble();
-        var hasBom = bytes.AsSpan().StartsWith(preamble);
-        var encoding = new UTF8Encoding(hasBom);
-        var skip = hasBom ? preamble.Length : 0;
-        var text = encoding.GetString(bytes, skip, bytes.Length - skip);
-
-        var patched = ForceConsoleOn(text, out var changed);
-        if (!changed) return false;
-        File.WriteAllText(path, patched, encoding);
-        return true;
-    }
+    public static bool ForceConsoleOn(string path) => Rewrite(path, (string t, out bool c) => ForceConsoleOn(t, out c));
 
     /// <summary>파일의 콘솔 창 설정을 끈다(0). 바꾼 것이 있으면 true.</summary>
-    public static bool ForceConsoleOff(string path)
+    public static bool ForceConsoleOff(string path) => Rewrite(path, (string t, out bool c) => ForceConsoleOff(t, out c));
+
+    private delegate string Patcher(string text, out bool changed);
+
+    /// <summary>BOM 유무를 보존하며 파일을 읽어 패치하고, 바뀐 경우에만 다시 쓴다.</summary>
+    private static bool Rewrite(string path, Patcher patch)
     {
         var bytes = File.ReadAllBytes(path);
         var preamble = Encoding.UTF8.GetPreamble();
@@ -46,7 +38,7 @@ public static class Ue4ssSettings
         var skip = hasBom ? preamble.Length : 0;
         var text = encoding.GetString(bytes, skip, bytes.Length - skip);
 
-        var patched = ForceConsoleOff(text, out var changed);
+        var patched = patch(text, out var changed);
         if (!changed) return false;
         File.WriteAllText(path, patched, encoding);
         return true;

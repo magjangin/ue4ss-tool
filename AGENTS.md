@@ -97,6 +97,11 @@
   dotnet build "Ue4ssTool.Tests\Ue4ssTool.Tests.csproj" -c Release
   ```
 
+## 6.5 2026-11-23 감사 요약
+
+- 중복 제거(`Ue4ssSettings.Rewrite`, `MainWindow.IsGameRunningAsync/Launch`)와 릴리스 목록 동시 요청(`Task.WhenAll`)만 적용. 상세는 `docs/architecture.md` 마지막 절.
+- 테스트 94개 통과(실측). GUI 실기 확인은 **미확인**.
+
 ## 7. 다음 작업자에게
 
 - 작업 전 기존 문서(0절)부터 읽는다.

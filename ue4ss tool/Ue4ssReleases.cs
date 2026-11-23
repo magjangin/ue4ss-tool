@@ -79,21 +79,24 @@ public static class Ue4ssReleases
         var packages = new List<Ue4ssPackage>();
         var errors = new List<string>();
 
-        foreach (var url in new[]
+        // 두 릴리스는 서로 독립이므로 동시에 요청한다(순서는 실험판 → 안정판 유지).
+        var urls = new[]
         {
             $"https://api.github.com/repos/{Repo}/releases/tags/{ExperimentalTag}",
             $"https://api.github.com/repos/{Repo}/releases/latest",
-        })
+        };
+        var results = await Task.WhenAll(urls.Select(async url =>
         {
-            try
-            {
-                var json = await Http.GetStringAsync(url, ct);
-                packages.AddRange(ParseRelease(json));
-            }
+            try { return (Packages: ParseRelease(await Http.GetStringAsync(url, ct)), Error: (string?)null); }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                errors.Add(ex.Message);
+                return (Packages: new List<Ue4ssPackage>(), Error: ex.Message);
             }
+        }));
+        foreach (var (list, error) in results)
+        {
+            packages.AddRange(list);
+            if (error is not null) errors.Add(error);
         }
 
         if (packages.Count == 0 && errors.Count > 0)

@@ -145,3 +145,18 @@ sequenceDiagram
   * 제거 시 `Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile/DeleteDirectory`를 이용해 **윈도우 휴지통**으로 안전 이동.
 * **`Ue4ssSettings.cs`**:
   * `UE4SS-settings.ini`의 `[Debug]` 섹션을 분석하여 디버그 및 GUI 콘솔 창 설정을 강제로 `1`로 활성화.
+
+## 코드 감사 기록 (2026-11-23)
+
+전 소스(약 2,000줄)와 테스트 94개를 점검한 결과와 조치:
+
+* **리팩토링 적용**
+  * `Ue4ssSettings`: `ForceConsoleOn/Off(path)`가 BOM 처리·읽기·쓰기를 중복 구현하던 것을 `Rewrite` 헬퍼로 통합(동작 동일).
+  * `MainWindow`: 설치/제거/토글에 3벌 복붙돼 있던 "게임 실행 중" 가드를 `IsGameRunningAsync`로, `Open`/`OpenText`를 `Launch`로 통합.
+* **병목 개선**
+  * `Ue4ssReleases.FetchAsync`: 실험판·안정판 GitHub 릴리스 요청을 순차 → `Task.WhenAll` 동시 요청으로 변경(순서 유지). 목록 로딩 대기시간이 약 절반.
+* **점검했으나 유지한 것**
+  * `UnrealInspector.ScanBranchString`: 4 MiB 청크 + 64바이트 오버랩 구조는 올바르고, 버전 리소스로 해결되지 않을 때만 호출되므로 그대로 둔다.
+  * `UnrealScanner`: 폴더별 `Parallel.ForEach`로 이미 병렬화돼 있다.
+  * `Ue4ssSettings`의 On/Off 텍스트 패치 루프는 키 누락 시 삽입 여부가 달라(On 은 삽입, Off 는 안 함) 억지로 합치지 않았다.
+* **검증**: `dotnet test` 94개 통과, Release 빌드 경고 0. 인게임(GUI 실기) 재검증은 하지 않았다.

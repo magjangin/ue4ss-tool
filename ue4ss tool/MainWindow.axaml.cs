@@ -321,6 +321,14 @@ public partial class MainWindow : Window
         if (SelectedGame == game) ShowDetail(game);
     }
 
+    /// <summary>게임이 실행 중이면 안내 창을 띄우고 true. 파일을 건드리는 작업 앞에서 쓴다.</summary>
+    private async Task<bool> IsGameRunningAsync(UnrealGame game)
+    {
+        if (!GameProcess.IsRunning(game.GameExe)) return false;
+        await ConfirmDialog.ShowAsync(this, "게임 실행 중", "게임이 실행 중입니다. 종료한 뒤 다시 시도하세요.");
+        return true;
+    }
+
     private void SetBusy(bool busy)
     {
         _busy = busy;
@@ -396,11 +404,7 @@ public partial class MainWindow : Window
         Func<IProgress<double>, CancellationToken, Task<string>> getZip)
     {
         if (game.ExeDir is not { } exeDir) return;
-        if (GameProcess.IsRunning(game.GameExe))
-        {
-            await ConfirmDialog.ShowAsync(this, "게임 실행 중", "게임이 실행 중입니다. 종료한 뒤 다시 시도하세요.");
-            return;
-        }
+        if (await IsGameRunningAsync(game)) return;
 
         SetBusy(true);
         DownloadBar.IsVisible = true;
@@ -476,11 +480,7 @@ public partial class MainWindow : Window
         if (SelectedGame is not { ExeDir: { } exeDir } game) return;
         try
         {
-            if (GameProcess.IsRunning(game.GameExe))
-            {
-                await ConfirmDialog.ShowAsync(this, "게임 실행 중", "게임이 실행 중입니다. 종료한 뒤 다시 시도하세요.");
-                return;
-            }
+            if (await IsGameRunningAsync(game)) return;
 
             var items = Ue4ssInstaller.PlanUninstall(exeDir);
             if (items.Count == 0)
@@ -526,11 +526,7 @@ public partial class MainWindow : Window
         if (SelectedGame is not { ExeDir: { } exeDir } game) return;
         try
         {
-            if (GameProcess.IsRunning(game.GameExe))
-            {
-                await ConfirmDialog.ShowAsync(this, "게임 실행 중", "게임이 실행 중입니다. 종료한 뒤 다시 시도하세요.");
-                return;
-            }
+            if (await IsGameRunningAsync(game)) return;
             var enable = game.Ue4ss.IsDisabled;
             Ue4ssInstaller.SetEnabled(exeDir, enable);
             Refresh(game);
@@ -593,22 +589,23 @@ public partial class MainWindow : Window
     private void OnOpenModsClick(object? sender, RoutedEventArgs e) => Open(SelectedGame?.Ue4ss.ModsDir);
     private void OnOpenLogClick(object? sender, RoutedEventArgs e) => OpenText(SelectedGame?.Ue4ss.LogPath);
 
-    private void Open(string? path)
-    {
-        if (string.IsNullOrEmpty(path)) return;
-        try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); }
-        catch (Exception ex) { ActionLog.Text = "열지 못했습니다: " + ex.Message; }
-    }
+    private void Open(string? path) => Launch(path, notepadFallback: false);
 
     /// <summary>.ini/.log 는 연결 프로그램이 없을 수 있어 메모장으로 한 번 더 시도한다.</summary>
-    private void OpenText(string? path)
+    private void OpenText(string? path) => Launch(path, notepadFallback: true);
+
+    private void Launch(string? path, bool notepadFallback)
     {
         if (string.IsNullOrEmpty(path)) return;
         try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); }
-        catch
+        catch (Exception ex)
         {
-            try { Process.Start(new ProcessStartInfo("notepad.exe", $"\"{path}\"") { UseShellExecute = true }); }
-            catch (Exception ex) { ActionLog.Text = "열지 못했습니다: " + ex.Message; }
+            if (notepadFallback)
+            {
+                try { Process.Start(new ProcessStartInfo("notepad.exe", $"\"{path}\"") { UseShellExecute = true }); return; }
+                catch (Exception inner) { ex = inner; }
+            }
+            ActionLog.Text = "열지 못했습니다: " + ex.Message;
         }
     }
 }
